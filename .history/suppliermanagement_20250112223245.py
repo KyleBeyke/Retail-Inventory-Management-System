@@ -1,7 +1,6 @@
 import psycopg2
 from psycopg2 import sql, Error
 import logging
-from datavalidationmanagement import DataValidationManagement
 
 # Configure logging
 logging.basicConfig(
@@ -9,7 +8,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
 
 class SupplierManagement:
     """
@@ -38,17 +36,12 @@ class SupplierManagement:
 
     def add_supplier(self, supplier_name, contact_info, address):
         """
-        Add a new supplier to the database after validating the inputs.
+        Add a new supplier to the database.
         :param supplier_name: Name of the supplier.
         :param contact_info: Contact information of the supplier (e.g., email, phone).
         :param address: Address of the supplier.
         :return: The ID of the newly added supplier.
         """
-        # Validate inputs
-        DataValidationManagement.validate_non_empty_string(supplier_name, "Supplier Name")
-        DataValidationManagement.validate_non_empty_string(contact_info, "Contact Info")
-        DataValidationManagement.validate_non_empty_string(address, "Address")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -70,13 +63,10 @@ class SupplierManagement:
 
     def get_supplier(self, supplier_id):
         """
-        Retrieve details of a supplier by their ID after validating the ID.
+        Retrieve details of a supplier by their ID.
         :param supplier_id: ID of the supplier.
         :return: A dictionary containing supplier details.
         """
-        # Validate input
-        DataValidationManagement.validate_positive_integer(supplier_id, "Supplier ID")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -107,22 +97,13 @@ class SupplierManagement:
 
     def update_supplier(self, supplier_id, supplier_name=None, contact_info=None, address=None):
         """
-        Update details of an existing supplier after validating inputs.
+        Update details of an existing supplier.
         :param supplier_id: ID of the supplier to update.
         :param supplier_name: New name of the supplier (optional).
         :param contact_info: New contact information (optional).
         :param address: New address (optional).
         :return: None.
         """
-        # Validate inputs
-        DataValidationManagement.validate_positive_integer(supplier_id, "Supplier ID")
-        if supplier_name:
-            DataValidationManagement.validate_non_empty_string(supplier_name, "Supplier Name")
-        if contact_info:
-            DataValidationManagement.validate_non_empty_string(contact_info, "Contact Info")
-        if address:
-            DataValidationManagement.validate_non_empty_string(address, "Address")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -159,13 +140,10 @@ class SupplierManagement:
 
     def delete_supplier(self, supplier_id):
         """
-        Delete a supplier from the database after validating the ID.
+        Delete a supplier from the database.
         :param supplier_id: ID of the supplier to delete.
         :return: None.
         """
-        # Validate input
-        DataValidationManagement.validate_positive_integer(supplier_id, "Supplier ID")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -187,15 +165,11 @@ class SupplierManagement:
 
     def add_supplier_product(self, supplier_id, product_id):
         """
-        Link a product to a supplier after validating the inputs.
+        Link a product to a supplier.
         :param supplier_id: ID of the supplier.
         :param product_id: ID of the product.
         :return: None.
         """
-        # Validate inputs
-        DataValidationManagement.validate_positive_integer(supplier_id, "Supplier ID")
-        DataValidationManagement.validate_positive_integer(product_id, "Product ID")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -212,3 +186,32 @@ class SupplierManagement:
             raise
         finally:
             conn.close()
+
+# Example Usage:
+if __name__ == "__main__":
+    # Database configuration
+    db_config = {
+        "dbname": "inventory_db",
+        "user": "inventory_user",
+        "password": "inventory_pass",
+        "host": "localhost",
+        "port": 5432
+    }
+
+    supplier_manager = SupplierManagement(db_config)
+
+    # Add a supplier
+    supplier_id = supplier_manager.add_supplier("Acme Corp", "acme@example.com", "123 Acme St")
+
+    # Get supplier details
+    details = supplier_manager.get_supplier(supplier_id)
+    print(details)
+
+    # Update supplier details
+    supplier_manager.update_supplier(supplier_id, contact_info="newemail@example.com")
+
+    # Link a product to the supplier
+    supplier_manager.add_supplier_product(supplier_id, product_id=101)
+
+    # Delete the supplier
+    supplier_manager.delete_supplier(supplier_id)

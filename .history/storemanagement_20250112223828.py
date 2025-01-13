@@ -1,7 +1,6 @@
 import psycopg2
 from psycopg2 import sql, Error
 import logging
-from datavalidationmanagement import DataValidationManagement
 
 # Configure logging
 logging.basicConfig(
@@ -10,11 +9,10 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-
 class StoreManagement:
     """
-    A class to manage store information, including adding, updating,
-    retrieving, and deleting store details.
+    A class to manage stores, including adding stores, retrieving store details,
+    managing stock levels at specific stores, and associating warehouses.
     """
 
     def __init__(self, db_config):
@@ -36,29 +34,23 @@ class StoreManagement:
             logging.error(f"Database connection error: {e}")
             raise
 
-    def add_store(self, store_name, location, phone_number=None):
+    def add_store(self, store_name, location, contact_info):
         """
-        Add a new store to the database after validating the inputs.
+        Add a new store to the database.
         :param store_name: Name of the store.
-        :param location: Location of the store.
-        :param phone_number: Phone number of the store (optional).
+        :param location: Location of the store (e.g., address).
+        :param contact_info: Contact information for the store.
         :return: The ID of the newly added store.
         """
-        # Validate inputs
-        DataValidationManagement.validate_non_empty_string(store_name, "Store Name")
-        DataValidationManagement.validate_non_empty_string(location, "Location")
-        if phone_number:
-            DataValidationManagement.validate_phone_number(phone_number, "Phone Number")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
                 query = """
-                INSERT INTO stores (store_name, location, phone_number)
+                INSERT INTO stores (store_name, location, contact_info)
                 VALUES (%s, %s, %s)
                 RETURNING store_id;
                 """
-                cursor.execute(query, (store_name, location, phone_number))
+                cursor.execute(query, (store_name, location, contact_info))
                 store_id = cursor.fetchone()[0]
                 conn.commit()
                 logging.info(f"Added store: {store_name} with ID: {store_id}.")
@@ -71,18 +63,15 @@ class StoreManagement:
 
     def get_store(self, store_id):
         """
-        Retrieve details of a store by its ID after validating the ID.
+        Retrieve details of a store by its ID.
         :param store_id: ID of the store.
         :return: A dictionary containing store details.
         """
-        # Validate input
-        DataValidationManagement.validate_positive_integer(store_id, "Store ID")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
                 query = """
-                SELECT store_id, store_name, location, phone_number
+                SELECT store_id, store_name, location, contact_info
                 FROM stores
                 WHERE store_id = %s;
                 """
@@ -93,7 +82,7 @@ class StoreManagement:
                         "store_id": result[0],
                         "store_name": result[1],
                         "location": result[2],
-                        "phone_number": result[3],
+                        "contact_info": result[3]
                     }
                     logging.info(f"Retrieved store details for ID: {store_id}.")
                     return store_details
@@ -106,24 +95,15 @@ class StoreManagement:
         finally:
             conn.close()
 
-    def update_store(self, store_id, store_name=None, location=None, phone_number=None):
+    def update_store(self, store_id, store_name=None, location=None, contact_info=None):
         """
-        Update details of an existing store after validating inputs.
+        Update details of an existing store.
         :param store_id: ID of the store to update.
         :param store_name: New name of the store (optional).
         :param location: New location of the store (optional).
-        :param phone_number: New phone number of the store (optional).
+        :param contact_info: New contact information for the store (optional).
         :return: None.
         """
-        # Validate inputs
-        DataValidationManagement.validate_positive_integer(store_id, "Store ID")
-        if store_name:
-            DataValidationManagement.validate_non_empty_string(store_name, "Store Name")
-        if location:
-            DataValidationManagement.validate_non_empty_string(location, "Location")
-        if phone_number:
-            DataValidationManagement.validate_phone_number(phone_number, "Phone Number")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -136,9 +116,9 @@ class StoreManagement:
                 if location:
                     fields.append("location = %s")
                     values.append(location)
-                if phone_number:
-                    fields.append("phone_number = %s")
-                    values.append(phone_number)
+                if contact_info:
+                    fields.append("contact_info = %s")
+                    values.append(contact_info)
 
                 if fields:
                     query = sql.SQL("""
@@ -160,13 +140,10 @@ class StoreManagement:
 
     def delete_store(self, store_id):
         """
-        Delete a store from the database after validating the ID.
+        Delete a store from the database.
         :param store_id: ID of the store to delete.
         :return: None.
         """
-        # Validate input
-        DataValidationManagement.validate_positive_integer(store_id, "Store ID")
-
         try:
             conn = self._connect()
             with conn.cursor() as cursor:
@@ -185,3 +162,58 @@ class StoreManagement:
             raise
         finally:
             conn.close()
+
+    def manage_store_stock(self, store_id, product_id, quantity):
+        """
+        Update stock levels for a product at a specific store.
+        :param store_id: ID of the store.
+        :param product_id: ID of the product.
+        :param quantity: New quantity of the product at the store.
+        :return: None.
+        """
+        try:
+            conn = self._connect()
+            with conn.cursor() as cursor:
+                query = """
+                INSERT INTO store_stock (store_id, product_id, quantity)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (store_id, product_id)
+                DO UPDATE SET quantity = EXCLUDED.quantity;
+                """
+                cursor.execute(query, (store_id, product_id, quantity))
+                conn.commit()
+                logging.info(f"Updated stock for product ID {product_id} at store ID {store_id} to {quantity}.")
+        except Error as e:
+            logging.error(f"Error managing stock for product ID {product_id} at store ID {store_id}: {e}")
+            raise
+        finally:
+            conn.close()
+
+# Example Usage:
+if __name__ == "__main__":
+    # Database configuration
+    db_config = {
+        "dbname": "inventory_db",
+        "user": "inventory_user",
+        "password": "inventory_pass",
+        "host": "localhost",
+        "port": 5432
+    }
+
+    store_manager = StoreManagement(db_config)
+
+    # Add a store
+    store_id = store_manager.add_store("Downtown Store", "123 Main St, Nashville, TN", "555-1234")
+
+    # Get store details
+    details = store_manager.get_store(store_id)
+    print(details)
+
+    # Update store details
+    store_manager.update_store(store_id, contact_info="555-5678")
+
+    # Manage stock for a product at the store
+    store_manager.manage_store_stock(store_id, product_id=2001, quantity=150)
+
+    # Delete the store
+    store_manager.delete_store(store_id)
