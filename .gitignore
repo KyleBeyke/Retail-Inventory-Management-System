@@ -1,0 +1,40 @@
+# Python bytecode and test artifacts.
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local package output.
+.venv/
+venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Runtime output.
+*.log
+logs/
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql
+exports/
+reports/
+
+# Local configuration and secrets.
+.env
+.env.*
+!.env.example
+config.ini
+local_config.*
+
+# Local editor/OS artifacts.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.history/

@@ -1,114 +1,71 @@
-The **BeykeTechnik Retail Inventory Management System** is a Python-based inventory management and point-of-sale (POS) solution designed for small to medium-sized retailers. It supports both local operation and integration with third-party POS systems such as WooCommerce. The system is tailored to streamline inventory control, product categorization, supplier management, and sales tracking, while remaining scalable to accommodate future business growth.
+# Retail Inventory Management System
 
----
+A Python-based inventory management prototype for small and medium-sized retailers. The project contains modules for products, suppliers, stores, warehouses, purchase orders, reporting, auditing, notifications, and PyQt-based management windows.
+
+This repository is best treated as an application prototype and module library. It includes database schema setup helpers and individual management components, but it does not currently package a single production installer.
 
 ## Features
 
-- **Inventory Management**
-  - Track stock levels, departments, categories, and subcategories.
-  - Monitor stock across multiple stores and warehouses.
-  - Support for detailed product attributes such as size, color, and custom tags.
-
-- **Supplier and Purchase Order Management**
-  - Maintain supplier contact details and manage supplier-product relationships.
-  - Create and track purchase orders, linking them to stock updates.
-
-- **Point of Sale (POS)**
-  - Integrate with third-party POS systems (e.g., Square or WooCommerce).
-  - Custom local POS option for in-store sales, including receipt printing and barcode scanning.
-
-- **Reporting and Insights**
-  - Generate detailed sales and inventory reports.
-  - Track sales trends and monitor inventory performance.
-
-- **User-Friendly GUI**
-  - Built using PyQt for an intuitive and responsive interface.
-  - Robust error handling and logging for ease of use and reliability.
-
-- **Scalability**
-  - Designed to support multi-store and multi-warehouse operations.
-  - Ready for future integration with WooCommerce and other e-commerce platforms.
-
----
+- Product, category, supplier, purchase order, store, and warehouse management modules.
+- Store and warehouse stock tracking.
+- Audit log, reporting, notification, backup, and maintenance helpers.
+- PyQt window components for interactive management screens.
+- PostgreSQL schema creation in `create_tables.py`.
+- Integration-oriented modules for data import/export and ecommerce synchronization.
 
 ## Requirements
 
-- **Operating System**: Windows, macOS, or Linux
-- **Python Version**: Python 3.9 or later
-- **Database**: PostgreSQL
-- **Libraries**:
-  - psycopg2
-  - PyQt5
-  - logging
-  - other dependencies listed in `requirements.txt`
+- Python 3.9+
+- PostgreSQL
+- Python dependencies listed in `requirements.txt`
 
----
+## Setup
 
-## Installation
-
-1. **Clone the Repository**:
-git clone <repository_url> cd BeykeTechnik-Inventory-System
-
-2. **Set Up the Database**:
-- Install PostgreSQL and create a new database for the system.
-- Use the provided `setup_database.py` script to initialize the database schema:
-  ```
-  python setup_database.py
-  ```
-
-3. **Install Dependencies**:
-Install required Python packages using `pip`:
+```bash
+git clone https://github.com/KyleBeyke/Retail-Inventory-Management-System.git
+cd Retail-Inventory-Management-System
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+```
 
+## Database
 
-4. **Configure the Application**:
-Update the configuration file (`config.ini`) with your database credentials and other system settings.
+Create a PostgreSQL database/user for local development, then update the connection values in the modules you plan to run. The current repository uses example local values in several demo blocks.
 
-5. **Run the Application**:
-Launch the main application:
-python main.py
+Initialize the core tables:
 
----
+```bash
+python create_tables.py
+```
 
-## Usage
+## Run A GUI Demo
 
-- **Adding Products**:
-Use the GUI to add products with details such as SKU, size, color, and pricing.
+```bash
+python guimanagement.py
+```
 
-- **Managing Suppliers**:
-Link products to suppliers and create purchase orders directly in the system.
+Other window modules can be imported and registered through `NavigationManager` as the application shell is developed.
 
-- **Tracking Inventory**:
-Monitor stock levels in real time and generate alerts for low inventory.
+## Validate The Repository
 
-- **Sales and Reporting**:
-Process sales transactions through the POS system and generate detailed reports for analysis.
+```bash
+scripts/validate.sh
+```
 
----
+The validation script compiles the Python files and checks that local/generated files such as `.history/`, `.DS_Store`, logs, and virtual environments are not tracked.
 
-## Support
+## Local Files
 
-For questions, bug reports, or feature requests, please contact the developer:
+Do not commit:
 
-**Kyle Beyke**  
-Email: [kyle.beyke@gmail.com](mailto:kyle.beyke@gmail.com)  
-Location: Tennessee, USA  
-
----
+- `.venv/` or `venv/`
+- `.history/`
+- `.DS_Store`
+- logs
+- local database dumps
+- local configuration files with real credentials
 
 ## License
 
-This project is licensed under the **BeykeTechnik Retail Inventory Management System License**.  
-See the `LICENSE` file for full details.
-
----
-
-## Future Enhancements
-
-- Multi-currency handling for international transactions.
-- Enhanced WooCommerce integration for seamless online and offline synchronization.
-- Mobile app support for on-the-go inventory management.
-
----
-
-Thank you for choosing the BeykeTechnik Retail Inventory Management System!
+This project is licensed under the terms in [LICENSE.txt](LICENSE.txt).
